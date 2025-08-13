@@ -1,12 +1,17 @@
 [package]
-name = "MessageBoard"
+name = "VerdictChain"
 version = "1.0.0"
-authors = []
+authors = ["VerdictChain Team"]
 
 [addresses]
-message_board_addr = "_"
+VerdictChain = "0xf96d929adc9b08c8be97d07acd65c44e779b96c45371cf25943c934523dd960a"
 
-[dependencies]
-AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", rev = "mainnet", subdir = "aptos-framework" }
+[dev-addresses]
+VerdictChain = "0xf96d929adc9b08c8be97d07acd65c44e779b96c45371cf25943c934523dd960a"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "mainnet"
+subdir = "aptos-move/framework/aptos-framework"
 
 [dev-dependencies]
