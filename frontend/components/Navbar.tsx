@@ -1,17 +1,42 @@
 import { Link } from "react-router-dom";
-import "./css/Navbar.css";
+import { WalletSelector } from "./WalletSelector";
 
 export default function Navbar() {
   return (
-    <nav className="navbar">
-      <div className="navbar-logo">Verdict-Chain</div>
-      <div className="navbar-links">
-        <Link to="/">Home</Link>
-        <Link to="/upload">Upload Evidence</Link>
-        <Link to="/view">View Evidence</Link>
-        <Link to="/login">Login</Link>
-        <Link to="/register">Register</Link>
+    <nav style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '1rem 2rem',
+      backgroundColor: '#ffffff',
+      borderBottom: '1px solid #e5e5e5',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+        <Link to="/" style={{ 
+          fontSize: '1.5rem', 
+          fontWeight: 'bold', 
+          color: '#333',
+          textDecoration: 'none' 
+        }}>
+          Verdict-Chain ⚖️
+        </Link>
+        
+        <div style={{ display: 'flex', gap: '1.5rem' }}>
+          <Link to="/" style={{ textDecoration: 'none', color: '#666', padding: '0.5rem' }}>
+            Home
+          </Link>
+          <Link to="/upload" style={{ textDecoration: 'none', color: '#666', padding: '0.5rem' }}>
+            Upload Evidence
+          </Link>
+          <Link to="/view" style={{ textDecoration: 'none', color: '#666', padding: '0.5rem' }}>
+            View Evidence
+          </Link>
+        </div>
       </div>
+
+      {/* Petra Wallet Connection */}
+      <WalletSelector />
     </nav>
   );
 }
