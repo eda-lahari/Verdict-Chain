@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 interface Evidence {
   id: number;
@@ -9,8 +9,7 @@ interface Evidence {
 }
 
 export default function EvidenceList() {
-  const [evidences, setEvidences] = useState<Evidence[]>([
-    // Demo data — later replace with data from Aptos contract
+  const [evidences] = useState<Evidence[]>([
     {
       id: 1,
       fileName: "case_photo.jpg",
@@ -20,27 +19,32 @@ export default function EvidenceList() {
     }
   ]);
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert("CID copied!");
+  }
+
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>📂 Stored Evidence</h2>
-      {evidences.map(ev => (
-        <div key={ev.id} style={{
-          background: "#fff",
-          padding: "15px",
-          marginBottom: "10px",
-          borderRadius: "8px",
-          boxShadow: "0 0 5px rgba(0,0,0,0.1)"
-        }}>
-          <p><strong>File:</strong> {ev.fileName}</p>
-          <p>
-            <strong>CID:</strong> <a href={`https://ipfs.io/ipfs/${ev.cid}`} target="_blank" rel="noreferrer">
-              {ev.cid}
-            </a>
-          </p>
-          <p><strong>SHA256:</strong> {ev.hash}</p>
-          <p><strong>Uploaded:</strong> {new Date(ev.timestamp).toLocaleString()}</p>
-        </div>
-      ))}
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold mb-4">📂 Stored Evidence</h2>
+      {evidences.length === 0 ? (
+        <p>No evidence uploaded yet.</p>
+      ) : (
+        evidences.map(ev => (
+          <div key={ev.id} className="bg-white p-5 rounded-lg shadow hover:shadow-lg transition">
+            <p><strong>File:</strong> {ev.fileName}</p>
+            <p>
+              <strong>CID:</strong> 
+              <a href={`https://ipfs.io/ipfs/${ev.cid}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline ml-1">
+                {ev.cid.slice(0,8)}...{ev.cid.slice(-6)}
+              </a>
+              <button onClick={() => copyToClipboard(ev.cid)} className="ml-2 px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 transition">Copy</button>
+            </p>
+            <p><strong>SHA256:</strong> {ev.hash.slice(0,8)}...{ev.hash.slice(-8)}</p>
+            <p><strong>Uploaded:</strong> {new Date(ev.timestamp).toLocaleString()}</p>
+          </div>
+        ))
+      )}
     </div>
   );
 }

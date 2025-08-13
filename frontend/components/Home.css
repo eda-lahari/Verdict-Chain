@@ -1,0 +1,131 @@
+/* Container */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  color: #2C2C34;
+}
+
+/* Hero Section */
+.hero-section {
+  background-color: #0A122A;
+  color: white;
+  text-align: center;
+  padding: 5rem 2rem;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  color: #d1d5db; /* light gray */
+  margin-bottom: 2rem;
+}
+
+.hero-buttons button {
+  padding: 0.75rem 2rem;
+  margin: 0 0.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #00C2A0;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #00b38f;
+}
+
+.btn-secondary {
+  background-color: #7B5FFF;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #6a4ce0;
+}
+
+/* Dashboard Section */
+.dashboard-section {
+  background-color: #F8F8F9;
+  flex: 1;
+  padding: 4rem 2rem;
+}
+
+.dashboard-title {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media(min-width: 768px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.dashboard-card {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.card-title {
+  font-size: 1rem;
+  color: #6B7280; /* gray */
+}
+
+.card-value {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  color: #0A122A;
+}
+
+/* Footer Section */
+.footer-section {
+  background-color: #0A122A;
+  color: white;
+  padding: 2rem;
+  text-align: center;
+}
+
+.footer-links {
+  margin-top: 1rem;
+}
+
+.footer-links a {
+  margin: 0 1rem;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
