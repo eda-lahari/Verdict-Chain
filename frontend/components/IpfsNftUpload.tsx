@@ -1,5 +1,74 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Hash, Link, CheckCircle, AlertCircle, FileText, Image, Video, File, Copy, Check, Calendar, Trash2 } from 'lucide-react';
+import { Upload, Hash, Link, CheckCircle, AlertCircle, FileText, Image, Video, File, Copy, Check, Calendar, Trash2, Wallet, Shield } from 'lucide-react';
+
+// Aptos SDK types and functions (mock implementation)
+interface AptosAccount {
+  address: string;
+  publicKey: string;
+}
+
+interface TransactionResponse {
+  hash: string;
+  success: boolean;
+  version?: string;
+  gas_used?: string;
+}
+
+// Mock Aptos SDK - Replace with actual Aptos SDK imports
+const AptosSDK = {
+  connect: async (): Promise<AptosAccount> => {
+    // Simulate wallet connection
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          address: "0x" + Math.random().toString(16).substr(2, 40),
+          publicKey: "0x" + Math.random().toString(16).substr(2, 64)
+        });
+      }, 1000);
+    });
+  },
+  
+  registerEvidence: async (
+    account: AptosAccount,
+    caseId: string,
+    evidenceHash: string,
+    metadata: string,
+    fileSize: number,
+    fileType: string
+  ): Promise<TransactionResponse> => {
+    // Simulate blockchain transaction
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (Math.random() > 0.1) { // 90% success rate
+          resolve({
+            hash: "0x" + Math.random().toString(16).substr(2, 64),
+            success: true,
+            version: Math.floor(Math.random() * 1000000).toString(),
+            gas_used: Math.floor(Math.random() * 1000).toString()
+          });
+        } else {
+          reject(new Error("Transaction failed: Insufficient gas or network error"));
+        }
+      }, 2000);
+    });
+  },
+
+  getEvidence: async (address: string): Promise<any> => {
+    // Simulate getting evidence from blockchain
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          evidence_hash: "sample_hash",
+          case_id: "CASE-12345678",
+          upload_timestamp: Date.now(),
+          metadata: "Sample metadata",
+          file_size: 1024,
+          file_type: "image/jpeg"
+        });
+      }, 1000);
+    });
+  }
+};
 
 // Types
 interface FileMetadata {
@@ -14,6 +83,10 @@ interface FileMetadata {
   url?: string;
   pinataUrl?: string;
   gatewayUrl?: string;
+  blockchainTxHash?: string;
+  blockchainVersion?: string;
+  gasUsed?: string;
+  onChain: boolean;
 }
 
 interface UploadResult {
@@ -25,9 +98,12 @@ interface UploadResult {
   pinataUrl?: string;
   gatewayUrl?: string;
   caseId: string;
+  blockchainTxHash?: string;
+  blockchainVersion?: string;
+  gasUsed?: string;
 }
 
-// SHA-256 hash function with better error handling
+// SHA-256 hash function
 const sha256 = async (file: File): Promise<string> => {
   try {
     const arrayBuffer = await file.arrayBuffer();
@@ -40,9 +116,8 @@ const sha256 = async (file: File): Promise<string> => {
   }
 };
 
-// Pinata SDK mock with better error handling
+// Pinata SDK
 const pinataUpload = async (file: File, jwt: string): Promise<{ IpfsHash: string }> => {
-  // Validate JWT token format
   if (!jwt || jwt === 'your-pinata-jwt-token-here' || !jwt.includes('.')) {
     throw new Error('Invalid or missing Pinata JWT token. Please configure your token.');
   }
@@ -53,7 +128,7 @@ const pinataUpload = async (file: File, jwt: string): Promise<{ IpfsHash: string
   const metadata = JSON.stringify({
     name: `Upload-${Date.now()}-${file.name}`,
     keyvalues: {
-      uploadedBy: 'File-Upload-System',
+      uploadedBy: 'VerdictChain-System',
       timestamp: new Date().toISOString()
     }
   });
@@ -130,8 +205,13 @@ const formatFileSize = (bytes: number): string => {
 };
 
 const VerdictChain: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'upload' | 'manage'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'blockchain'>('upload');
   const [uploadedFiles, setUploadedFiles] = useState<FileMetadata[]>([]);
+  
+  // Blockchain states
+  const [walletConnected, setWalletConnected] = useState<boolean>(false);
+  const [aptosAccount, setAptosAccount] = useState<AptosAccount | null>(null);
+  const [connectingWallet, setConnectingWallet] = useState<boolean>(false);
   
   // Upload states
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -152,6 +232,18 @@ const VerdictChain: React.FC = () => {
   useEffect(() => {
     const savedFiles = JSON.parse(localStorage.getItem('uploaded-files') || '[]');
     setUploadedFiles(savedFiles);
+    
+    // Check if wallet was previously connected
+    const savedWallet = localStorage.getItem('aptos-wallet');
+    if (savedWallet) {
+      try {
+        const walletData = JSON.parse(savedWallet);
+        setAptosAccount(walletData);
+        setWalletConnected(true);
+      } catch (e) {
+        localStorage.removeItem('aptos-wallet');
+      }
+    }
   }, []);
 
   // Save data
@@ -160,6 +252,34 @@ const VerdictChain: React.FC = () => {
       localStorage.setItem('uploaded-files', JSON.stringify(uploadedFiles));
     }
   }, [uploadedFiles]);
+
+  useEffect(() => {
+    if (aptosAccount) {
+      localStorage.setItem('aptos-wallet', JSON.stringify(aptosAccount));
+    }
+  }, [aptosAccount]);
+
+  // Wallet connection
+  const connectWallet = async () => {
+    setConnectingWallet(true);
+    setError(null);
+    
+    try {
+      const account = await AptosSDK.connect();
+      setAptosAccount(account);
+      setWalletConnected(true);
+    } catch (err: any) {
+      setError(`Failed to connect wallet: ${err.message}`);
+    } finally {
+      setConnectingWallet(false);
+    }
+  };
+
+  const disconnectWallet = () => {
+    setAptosAccount(null);
+    setWalletConnected(false);
+    localStorage.removeItem('aptos-wallet');
+  };
 
   // File type icons
   const getFileIcon = (mimeType: string) => {
@@ -193,7 +313,6 @@ const VerdictChain: React.FC = () => {
       'application/json', 'application/xml', 'text/xml'
     ];
 
-    // More flexible file type checking
     const isAllowedType = allowedTypes.includes(file.type) || 
                          file.name.toLowerCase().endsWith('.doc') ||
                          file.name.toLowerCase().endsWith('.docx') ||
@@ -251,10 +370,15 @@ const VerdictChain: React.FC = () => {
     }
   };
 
-  // Upload handler
+  // Upload handler with blockchain integration
   const handleUpload = async () => {
     if (!selectedFile) {
       setError('Please select a file to upload.');
+      return;
+    }
+
+    if (!walletConnected || !aptosAccount) {
+      setError('Please connect your Aptos wallet first.');
       return;
     }
 
@@ -262,12 +386,12 @@ const VerdictChain: React.FC = () => {
     setError(null);
 
     try {
-      // Step 1: Validate file before processing
+      // Step 1: Validate file
       if (selectedFile.size === 0) {
         throw new Error('File is empty or corrupted.');
       }
 
-      // Step 2: Compute SHA-256 hash with better error handling
+      // Step 2: Compute SHA-256 hash
       console.log('Computing SHA-256 hash for file:', selectedFile.name);
       const hash = await sha256(selectedFile);
 
@@ -282,7 +406,7 @@ const VerdictChain: React.FC = () => {
       // Step 4: Generate unique case ID
       const caseId = generateCaseId();
 
-      // Step 5: Upload to Pinata IPFS with better error handling
+      // Step 5: Upload to Pinata IPFS
       console.log('Uploading to Pinata IPFS...');
       let pinataResult;
       try {
@@ -292,7 +416,34 @@ const VerdictChain: React.FC = () => {
         throw new Error(`Upload to IPFS failed: ${uploadError.message || 'Network error'}`);
       }
 
-      // Step 6: Create file metadata
+      // Step 6: Register evidence on Aptos blockchain
+      console.log('Registering evidence on Aptos blockchain...');
+      let blockchainResult;
+      try {
+        const metadata = JSON.stringify({
+          originalName: selectedFile.name,
+          ipfsHash: pinataResult.IpfsHash,
+          uploadTimestamp: new Date().toISOString()
+        });
+
+        blockchainResult = await AptosSDK.registerEvidence(
+          aptosAccount,
+          caseId,
+          hash,
+          metadata,
+          selectedFile.size,
+          selectedFile.type || 'application/octet-stream'
+        );
+
+        if (!blockchainResult.success) {
+          throw new Error('Blockchain transaction failed');
+        }
+      } catch (blockchainError: any) {
+        console.error('Blockchain registration error:', blockchainError);
+        throw new Error(`Blockchain registration failed: ${blockchainError.message || 'Transaction error'}`);
+      }
+
+      // Step 7: Create file metadata with blockchain info
       const fileMetadata: FileMetadata = {
         id: Date.now() + Math.random().toString(),
         caseId: caseId,
@@ -304,13 +455,17 @@ const VerdictChain: React.FC = () => {
         uploadDate: new Date().toISOString(),
         url: URL.createObjectURL(selectedFile),
         pinataUrl: `${PINATA_GATEWAY}/${pinataResult.IpfsHash}`,
-        gatewayUrl: `https://ipfs.io/ipfs/${pinataResult.IpfsHash}`
+        gatewayUrl: `https://ipfs.io/ipfs/${pinataResult.IpfsHash}`,
+        blockchainTxHash: blockchainResult.hash,
+        blockchainVersion: blockchainResult.version,
+        gasUsed: blockchainResult.gas_used,
+        onChain: true
       };
 
-      // Step 7: Save file record
+      // Step 8: Save file record
       setUploadedFiles(prev => [...prev, fileMetadata]);
 
-      // Step 8: Set upload result
+      // Step 9: Set upload result
       const result: UploadResult = {
         success: true,
         ipfsHash: pinataResult.IpfsHash,
@@ -319,7 +474,10 @@ const VerdictChain: React.FC = () => {
         sha256Hash: hash,
         pinataUrl: `${PINATA_GATEWAY}/${pinataResult.IpfsHash}`,
         gatewayUrl: `https://ipfs.io/ipfs/${pinataResult.IpfsHash}`,
-        caseId: caseId
+        caseId: caseId,
+        blockchainTxHash: blockchainResult.hash,
+        blockchainVersion: blockchainResult.version,
+        gasUsed: blockchainResult.gas_used
       };
 
       setUploadResult(result);
@@ -328,14 +486,9 @@ const VerdictChain: React.FC = () => {
     } catch (err: any) {
       console.error('Upload error:', err);
       
-      // More specific error messages
       let errorMessage = 'Upload failed. Please try again.';
       if (err.message) {
         errorMessage = err.message;
-      } else if (err.toString().includes('encoding') || err.toString().includes('charset')) {
-        errorMessage = 'File encoding error. Please try saving the file in a different format.';
-      } else if (err.toString().includes('network') || err.toString().includes('fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
       }
       
       setError(errorMessage);
@@ -360,6 +513,34 @@ const VerdictChain: React.FC = () => {
           <div className="text-center py-8">
             <h1 className="text-4xl font-bold text-white mb-2">VERDICT-CHAIN</h1>
             <p className="text-gray-300 text-lg">Evidence Protector • Blockchain Secured • Immutable Records</p>
+            
+            {/* Wallet Status */}
+            <div className="mt-4 flex justify-center">
+              {walletConnected ? (
+                <div className="flex items-center space-x-4 bg-green-900 px-6 py-3 rounded-lg border border-green-700">
+                  <Shield className="w-5 h-5 text-green-400" />
+                  <div className="text-left">
+                    <p className="text-green-400 font-medium">Connected to Aptos</p>
+                    <p className="text-green-300 text-sm">{aptosAccount?.address.slice(0, 10)}...{aptosAccount?.address.slice(-6)}</p>
+                  </div>
+                  <button
+                    onClick={disconnectWallet}
+                    className="text-green-400 hover:text-green-300 text-sm underline"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={connectWallet}
+                  disabled={connectingWallet}
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Wallet className="w-5 h-5" />
+                  <span>{connectingWallet ? 'Connecting...' : 'Connect Aptos Wallet'}</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Tabs */}
@@ -387,6 +568,17 @@ const VerdictChain: React.FC = () => {
                 <FileText className="w-4 h-4 inline mr-2" />
                 Cases ({uploadedFiles.length})
               </button>
+              <button
+                onClick={() => setActiveTab('blockchain')}
+                className={`py-4 px-6 border-b-2 font-medium transition-colors ${
+                  activeTab === 'blockchain'
+                    ? 'border-white text-white'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                <Shield className="w-4 h-4 inline mr-2" />
+                Blockchain Status
+              </button>
             </nav>
           </div>
         </div>
@@ -396,6 +588,17 @@ const VerdictChain: React.FC = () => {
           {/* Upload Files Tab */}
           {activeTab === 'upload' && (
             <div className="max-w-2xl mx-auto">
+              {/* Wallet Connection Check */}
+              {!walletConnected && (
+                <div className="mb-6 p-4 bg-yellow-900 border border-yellow-700 rounded-lg">
+                  <div className="flex items-center space-x-2 text-yellow-300">
+                    <AlertCircle className="w-5 h-5" />
+                    <span className="font-medium">Wallet Required</span>
+                  </div>
+                  <p className="text-yellow-200 mt-1">Please connect your Aptos wallet to upload evidence to the blockchain.</p>
+                </div>
+              )}
+
               {/* Upload Area */}
               <div
                 className={`border-2 border-dashed rounded-lg p-16 text-center transition-colors ${
@@ -420,6 +623,7 @@ const VerdictChain: React.FC = () => {
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
                     <p className="text-gray-300">Securing evidence on blockchain...</p>
+                    <p className="text-gray-400 text-sm mt-2">This may take a few minutes</p>
                   </div>
                 ) : (
                   <>
@@ -448,7 +652,7 @@ const VerdictChain: React.FC = () => {
                     </div>
                     <button
                       onClick={handleUpload}
-                      disabled={uploading}
+                      disabled={uploading || !walletConnected}
                       className="bg-white text-black px-6 py-3 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                     >
                       {uploading ? 'Securing...' : 'Secure Evidence'}
@@ -493,6 +697,28 @@ const VerdictChain: React.FC = () => {
                         </button>
                       </div>
                     </div>
+
+                    {/* Blockchain Transaction */}
+                    {uploadResult.blockchainTxHash && (
+                      <div>
+                        <div className="flex items-center space-x-2 mb-3">
+                          <Shield className="w-5 h-5 text-purple-400" />
+                          <span className="font-medium text-white">Blockchain Transaction:</span>
+                        </div>
+                        <div className="flex items-center space-x-2 bg-black p-4 rounded border border-gray-600">
+                          <code className="text-sm break-all flex-1 text-gray-300">{uploadResult.blockchainTxHash}</code>
+                          <button
+                            onClick={() => copyToClipboard(uploadResult.blockchainTxHash!, 'txHash')}
+                            className="text-purple-400 hover:text-purple-300 p-2"
+                          >
+                            {copied === 'txHash' ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5" />}
+                          </button>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-400">
+                          Version: {uploadResult.blockchainVersion} • Gas Used: {uploadResult.gasUsed}
+                        </div>
+                      </div>
+                    )}
 
                     {/* SHA-256 Hash */}
                     <div>
@@ -554,7 +780,15 @@ const VerdictChain: React.FC = () => {
                         onClick={() => setSelectedFileDetails(file)}
                       >
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold text-white text-lg">{file.caseId}</h3>
+                          <div className="flex items-center space-x-3">
+                            <h3 className="font-semibold text-white text-lg">{file.caseId}</h3>
+                            {file.onChain && (
+                              <div className="flex items-center space-x-1 bg-green-900 px-2 py-1 rounded-full">
+                                <Shield className="w-3 h-3 text-green-400" />
+                                <span className="text-green-400 text-xs font-medium">On-Chain</span>
+                              </div>
+                            )}
+                          </div>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -614,6 +848,35 @@ const VerdictChain: React.FC = () => {
                             <label className="text-sm font-medium text-gray-400">Upload Date:</label>
                             <p className="text-white mt-1">{new Date(selectedFileDetails.uploadDate).toLocaleString()}</p>
                           </div>
+
+                          {/* Blockchain Info */}
+                          {selectedFileDetails.onChain && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-400">Blockchain Status:</label>
+                              <div className="flex items-center space-x-2 mt-2">
+                                <Shield className="w-4 h-4 text-green-400" />
+                                <span className="text-green-400 font-medium">Secured on Aptos Blockchain</span>
+                              </div>
+                              {selectedFileDetails.blockchainTxHash && (
+                                <div className="mt-2">
+                                  <div className="flex items-center space-x-2">
+                                    <code className="text-xs bg-black p-2 rounded flex-1 break-all text-gray-300 border border-gray-600">
+                                      {selectedFileDetails.blockchainTxHash}
+                                    </code>
+                                    <button
+                                      onClick={() => copyToClipboard(selectedFileDetails.blockchainTxHash!, 'detailTxHash')}
+                                      className="text-purple-400 hover:text-purple-300 p-2"
+                                    >
+                                      {copied === 'detailTxHash' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                                    </button>
+                                  </div>
+                                  <p className="text-xs text-gray-400 mt-1">
+                                    Version: {selectedFileDetails.blockchainVersion} • Gas: {selectedFileDetails.gasUsed}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                           
                           <div>
                             <label className="text-sm font-medium text-gray-400">SHA-256 Hash:</label>
@@ -678,6 +941,87 @@ const VerdictChain: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Blockchain Status Tab */}
+          {activeTab === 'blockchain' && (
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl font-bold mb-8 text-white">Blockchain Status</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Wallet Status */}
+                <div className="bg-gray-900 rounded-lg p-6 border border-gray-600">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Wallet className="w-6 h-6 text-blue-400" />
+                    <h3 className="text-lg font-semibold text-white">Wallet Status</h3>
+                  </div>
+                  {walletConnected ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        <span className="text-green-400">Connected</span>
+                      </div>
+                      <p className="text-gray-300 text-sm">
+                        {aptosAccount?.address}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <AlertCircle className="w-4 h-4 text-red-400" />
+                      <span className="text-red-400">Not Connected</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Total Cases */}
+                <div className="bg-gray-900 rounded-lg p-6 border border-gray-600">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <FileText className="w-6 h-6 text-green-400" />
+                    <h3 className="text-lg font-semibold text-white">Total Cases</h3>
+                  </div>
+                  <p className="text-3xl font-bold text-green-400">{uploadedFiles.length}</p>
+                  <p className="text-gray-400 text-sm">Evidence files secured</p>
+                </div>
+
+                {/* On-Chain Cases */}
+                <div className="bg-gray-900 rounded-lg p-6 border border-gray-600">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Shield className="w-6 h-6 text-purple-400" />
+                    <h3 className="text-lg font-semibold text-white">On-Chain</h3>
+                  </div>
+                  <p className="text-3xl font-bold text-purple-400">
+                    {uploadedFiles.filter(f => f.onChain).length}
+                  </p>
+                  <p className="text-gray-400 text-sm">Blockchain secured</p>
+                </div>
+              </div>
+
+              {/* Recent Transactions */}
+              <div className="mt-8 bg-gray-900 rounded-lg p-6 border border-gray-600">
+                <h3 className="text-lg font-semibold mb-4 text-white">Recent Blockchain Transactions</h3>
+                {uploadedFiles.filter(f => f.onChain && f.blockchainTxHash).length === 0 ? (
+                  <p className="text-gray-400">No blockchain transactions yet</p>
+                ) : (
+                  <div className="space-y-4">
+                    {uploadedFiles
+                      .filter(f => f.onChain && f.blockchainTxHash)
+                      .slice(0, 5)
+                      .map(file => (
+                        <div key={file.id} className="flex items-center justify-between p-4 bg-black rounded border border-gray-700">
+                          <div>
+                            <p className="text-white font-medium">{file.caseId}</p>
+                            <p className="text-gray-400 text-sm">{new Date(file.uploadDate).toLocaleString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <code className="text-xs text-gray-300">{file.blockchainTxHash?.slice(0, 16)}...</code>
+                            <p className="text-gray-400 text-xs">Gas: {file.gasUsed}</p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
