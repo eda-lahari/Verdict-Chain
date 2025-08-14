@@ -27,16 +27,26 @@ interface UploadResult {
   caseId: string;
 }
 
-// SHA-256 hash function
+// SHA-256 hash function with better error handling
 const sha256 = async (file: File): Promise<string> => {
-  const arrayBuffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  } catch (error) {
+    console.error('Error computing SHA-256 hash:', error);
+    throw new Error('Failed to compute file hash. File may be corrupted or unsupported.');
+  }
 };
 
-// Pinata SDK mock (since we can't import it in artifacts)
+// Pinata SDK mock with better error handling
 const pinataUpload = async (file: File, jwt: string): Promise<{ IpfsHash: string }> => {
+  // Validate JWT token format
+  if (!jwt || jwt === 'your-pinata-jwt-token-here' || !jwt.includes('.')) {
+    throw new Error('Invalid or missing Pinata JWT token. Please configure your token.');
+  }
+
   const formData = new FormData();
   formData.append('file', file);
 
@@ -54,20 +64,50 @@ const pinataUpload = async (file: File, jwt: string): Promise<{ IpfsHash: string
   });
   formData.append('pinataOptions', options);
 
-  const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${jwt}`
-    },
-    body: formData
-  });
+  try {
+    const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${jwt}`
+      },
+      body: formData
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.details || 'Upload failed');
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = 'Upload failed';
+      
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.error?.details || errorJson.message || 'Upload failed';
+      } catch {
+        if (response.status === 401) {
+          errorMessage = 'Invalid Pinata API token. Please check your JWT token.';
+        } else if (response.status === 403) {
+          errorMessage = 'Access denied. Please check your Pinata API permissions.';
+        } else if (response.status >= 500) {
+          errorMessage = 'Pinata server error. Please try again later.';
+        } else {
+          errorMessage = `Upload failed with status ${response.status}`;
+        }
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    
+    if (!result.IpfsHash) {
+      throw new Error('Invalid response from Pinata: missing IPFS hash');
+    }
+
+    return result;
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Network error: Unable to connect to Pinata. Please check your internet connection.');
+    }
+    throw error;
   }
-
-  return await response.json();
 };
 
 // Generate unique case ID
@@ -104,8 +144,8 @@ const IpfsUploadSystem: React.FC = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [selectedFileDetails, setSelectedFileDetails] = useState<FileMetadata | null>(null);
 
-  // Environment variables (you should replace this with your actual JWT)
-  const PINATA_JWT = 'your-pinata-jwt-token-here';
+  // Environment variables - Replace with your actual Pinata JWT token
+  const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI3ZjRiYjJkMC0xZDY0LTQ1OTgtYjYzMC1hZDJiYzdlMjM5ZGQiLCJlbWFpbCI6IjIyNTAxYTA1MTVAcHZwc2l0LmFjLmluIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjgyMzMwYjA5MGNjNzNhMDZkYjEwIiwic2NvcGVkS2V5U2VjcmV0IjoiNTg5ZjhlMTllYTE0OGVmNDcyOWI3YzU1OTdjZjUxOGQ2M2RhNDQ3MTI1Y2U1OWNlNTc2YzNlY2IzNzdmYTExYyIsImV4cCI6MTc4NjY1ODk0MX0.8W6IfvrKeYWIFA5eyUtJpjg4qBVr83NPKB_f1Vm_yPE';
   const PINATA_GATEWAY = 'https://gateway.pinata.cloud/ipfs';
 
   // Load saved data
@@ -143,18 +183,39 @@ const IpfsUploadSystem: React.FC = () => {
   // File selection handlers
   const handleFileSelect = (file: File) => {
     const allowedTypes = [
-      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
-      'video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo',
-      'application/pdf', 'text/plain'
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff',
+      'video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo', 'video/webm',
+      'application/pdf', 'text/plain', 'text/csv',
+      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/zip', 'application/x-zip-compressed',
+      'application/json', 'application/xml', 'text/xml'
     ];
 
-    if (!allowedTypes.includes(file.type)) {
-      setError('File type not supported. Please select an image, video, PDF, or text file.');
+    // More flexible file type checking
+    const isAllowedType = allowedTypes.includes(file.type) || 
+                         file.name.toLowerCase().endsWith('.doc') ||
+                         file.name.toLowerCase().endsWith('.docx') ||
+                         file.name.toLowerCase().endsWith('.xls') ||
+                         file.name.toLowerCase().endsWith('.xlsx') ||
+                         file.name.toLowerCase().endsWith('.ppt') ||
+                         file.name.toLowerCase().endsWith('.pptx') ||
+                         file.name.toLowerCase().endsWith('.txt') ||
+                         file.name.toLowerCase().endsWith('.csv');
+
+    if (!isAllowedType) {
+      setError('File type not supported. Please select a supported file type.');
       return;
     }
 
     if (file.size > 100 * 1024 * 1024) {
       setError('File size too large. Maximum size is 100MB.');
+      return;
+    }
+
+    if (file.size === 0) {
+      setError('File appears to be empty or corrupted.');
       return;
     }
 
@@ -201,32 +262,43 @@ const IpfsUploadSystem: React.FC = () => {
     setError(null);
 
     try {
-      // Step 1: Compute SHA-256 hash
-      console.log('Computing SHA-256 hash...');
+      // Step 1: Validate file before processing
+      if (selectedFile.size === 0) {
+        throw new Error('File is empty or corrupted.');
+      }
+
+      // Step 2: Compute SHA-256 hash with better error handling
+      console.log('Computing SHA-256 hash for file:', selectedFile.name);
       const hash = await sha256(selectedFile);
 
-      // Step 2: Check for duplicates
+      // Step 3: Check for duplicates
       const duplicate = uploadedFiles.find(f => f.hash === hash);
       if (duplicate) {
-        setError('File already uploaded. Duplicate detected.');
+        setError(`File already uploaded. Duplicate detected (Case ID: ${duplicate.caseId}).`);
         setUploading(false);
         return;
       }
 
-      // Step 3: Generate unique case ID
+      // Step 4: Generate unique case ID
       const caseId = generateCaseId();
 
-      // Step 4: Upload to Pinata IPFS
+      // Step 5: Upload to Pinata IPFS with better error handling
       console.log('Uploading to Pinata IPFS...');
-      const pinataResult = await pinataUpload(selectedFile, PINATA_JWT);
+      let pinataResult;
+      try {
+        pinataResult = await pinataUpload(selectedFile, PINATA_JWT);
+      } catch (uploadError: any) {
+        console.error('Pinata upload error:', uploadError);
+        throw new Error(`Upload to IPFS failed: ${uploadError.message || 'Network error'}`);
+      }
 
-      // Step 5: Create file metadata
+      // Step 6: Create file metadata
       const fileMetadata: FileMetadata = {
         id: Date.now() + Math.random().toString(),
         caseId: caseId,
         name: selectedFile.name,
         size: selectedFile.size,
-        type: selectedFile.type,
+        type: selectedFile.type || 'application/octet-stream',
         hash: hash,
         ipfsHash: pinataResult.IpfsHash,
         uploadDate: new Date().toISOString(),
@@ -235,10 +307,10 @@ const IpfsUploadSystem: React.FC = () => {
         gatewayUrl: `https://ipfs.io/ipfs/${pinataResult.IpfsHash}`
       };
 
-      // Step 6: Save file record
+      // Step 7: Save file record
       setUploadedFiles(prev => [...prev, fileMetadata]);
 
-      // Step 7: Set upload result
+      // Step 8: Set upload result
       const result: UploadResult = {
         success: true,
         ipfsHash: pinataResult.IpfsHash,
@@ -255,7 +327,18 @@ const IpfsUploadSystem: React.FC = () => {
 
     } catch (err: any) {
       console.error('Upload error:', err);
-      setError(err.message || 'Upload failed. Please try again.');
+      
+      // More specific error messages
+      let errorMessage = 'Upload failed. Please try again.';
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.toString().includes('encoding') || err.toString().includes('charset')) {
+        errorMessage = 'File encoding error. Please try saving the file in a different format.';
+      } else if (err.toString().includes('network') || err.toString().includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setUploading(false);
     }
@@ -333,7 +416,7 @@ const IpfsUploadSystem: React.FC = () => {
                   <input
                     type="file"
                     onChange={handleFileChange}
-                    accept="image/*,video/*,.pdf,.txt"
+                    accept="image/*,video/*,.pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.json,.xml,.zip"
                     className="hidden"
                     id="fileInput"
                   />
@@ -354,7 +437,7 @@ const IpfsUploadSystem: React.FC = () => {
                       >
                         Choose Files
                       </label>
-                      <p className="text-sm text-gray-500 mt-4">Supports images, videos, PDFs, and text files</p>
+                      <p className="text-sm text-gray-500 mt-4">Supports images, videos, PDFs, documents, and various file formats</p>
                     </>
                   )}
                 </div>
