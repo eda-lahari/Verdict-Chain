@@ -6,9 +6,13 @@ import Register from "./components/Register";
 import UploadEvidence from "./components/UploadEvidence";
 import ViewEvidence from "./components/ViewEvidence";
 import { useState } from "react";
+import { useTamperCheck } from "./hooks/useTamperCheck"; // import the tamper check hook
 
 function App() {
   const [totalEvidence, setTotalEvidence] = useState<number>(0);
+
+  // Run integrity check on app load
+  useTamperCheck();
 
   return (
     <BrowserRouter>

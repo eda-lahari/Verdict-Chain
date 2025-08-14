@@ -1,6 +1,13 @@
-export async function sha256(file: globalThis.File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// utils/hash.ts
+
+export function getHash(): string {
+  // Example: compute hash of some critical data
+  const data = localStorage.getItem("evidenceData") || "";
+  // Replace with your actual hashing logic
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    hash = (hash << 5) - hash + data.charCodeAt(i);
+    hash |= 0; // convert to 32bit integer
+  }
+  return hash.toString();
 }
