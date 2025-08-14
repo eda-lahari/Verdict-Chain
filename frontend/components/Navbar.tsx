@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import "./css/Navbar.css";
+import { WalletSelector } from "./WalletSelector";
 
 export default function Navbar() {
   return (
@@ -19,18 +19,22 @@ export default function Navbar() {
           color: '#333',
           textDecoration: 'none' 
         }}>
-          Verdict-Chain ⚖️
+          Verdict-Chain ⚖
         </Link>
         
         <div style={{ display: 'flex', gap: '1.5rem' }}>
           <Link to="/" style={{ textDecoration: 'none', color: '#666', padding: '0.5rem' }}>
             Home
           </Link>
+          <Link to="/upload" style={{ textDecoration: 'none', color: '#666', padding: '0.5rem' }}>
+            Upload Evidence
+          </Link>
           <Link to="/evidence" style={{ textDecoration: 'none', color: '#666', padding: '0.5rem' }}>
-            Evidence
+            View Evidence
           </Link>
         </div>
       </div>
+      <WalletSelector />
     </nav>
   );
 }
