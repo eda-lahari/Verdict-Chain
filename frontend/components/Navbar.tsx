@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { WalletSelector } from "./WalletSelector";
+import "./css/Navbar.css";
 
 export default function Navbar() {
   return (
@@ -31,9 +31,6 @@ export default function Navbar() {
           </Link>
         </div>
       </div>
-
-      {/* Petra Wallet Connection */}
-      <WalletSelector />
     </nav>
   );
 }
