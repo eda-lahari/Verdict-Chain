@@ -4,10 +4,10 @@ version = "1.0.0"
 authors = ["VerdictChain Team"]
 
 [addresses]
-VerdictChain = "0xf96d929adc9b08c8be97d07acd65c44e779b96c45371cf25943c934523dd960a"
+VerdictChain = "0xb4fa8f8edc3210feb00d0e9df7f74cc230b9499a7747e0097d7cf0ce2e49192b"
 
 [dev-addresses]
-VerdictChain = "0xf96d929adc9b08c8be97d07acd65c44e779b96c45371cf25943c934523dd960a"
+VerdictChain = "0xb4fa8f8edc3210feb00d0e9df7f74cc230b9499a7747e0097d7cf0ce2e49192b"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"

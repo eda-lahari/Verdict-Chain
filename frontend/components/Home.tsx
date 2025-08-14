@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import Confetti from "react-confetti";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { WalletSelector } from "./WalletSelector";
 import "./Home.css";
 
 interface HomeProps {
@@ -9,34 +9,55 @@ interface HomeProps {
 }
 
 export default function Home({ totalEvidence }: HomeProps) {
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const { connected, account } = useWallet();
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   const handleUploadClick = () => {
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 3000); // 3s confetti
+    setShowCelebration(true);
+    setTimeout(() => setShowCelebration(false), 3000);
   };
 
   return (
     <div className="home-container">
-      {showConfetti && <Confetti />}
+      {showCelebration && (
+        <div className="celebration-overlay">
+          <div className="celebration-text">🎉 Great Choice! 🎉</div>
+        </div>
+      )}
 
-      {/* Hero Section */}
-      <motion.section
-        className="hero-section"
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
+      <div className={`wallet-test-section ${isLoaded ? 'fade-in' : ''}`}>
+        <h3 className="wallet-test-title">🧪 Wallet Connection Test</h3>
+        <WalletSelector />
+        <div className="wallet-status-container">
+          {connected ? (
+            <div className="connection-status connected">
+              <strong>✅ Wallet Connected Successfully!</strong>
+              <br />
+              <small>Address: {account?.address.toString().slice(0, 10)}...{account?.address.toString().slice(-8)}</small>
+            </div>
+          ) : (
+            <div className="connection-status disconnected">
+              ⚠️ Please connect your wallet to use blockchain features
+            </div>
+          )}
+        </div>
+      </div>
+
+      <section className={`hero-section ${isLoaded ? 'slide-in' : ''}`}>
         <h1 className="hero-title">Secure, Immutable Evidence on Blockchain</h1>
         <p className="hero-subtitle">
           Upload, verify, and manage evidence safely using blockchain technology.
         </p>
         <div className="hero-buttons">
-          <Link to="/evidence" className="btn-primary">
           <Link
             to="/upload"
             onClick={handleUploadClick}
-            className="btn-primary"
+            className="btn-primary pulse-hover"
           >
             Upload Evidence
           </Link>
@@ -44,34 +65,22 @@ export default function Home({ totalEvidence }: HomeProps) {
             View Evidence
           </Link>
         </div>
-      </motion.section>
+      </section>
 
-      {/* Dashboard Section */}
       <section className="dashboard-section">
         <h2 className="dashboard-title">Dashboard</h2>
-        <motion.div
-          className="dashboard-cards"
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: {},
-            visible: {
-              transition: {
-                staggerChildren: 0.2
-              }
-            }
-          }}
-        >
-          <motion.div
-            className="dashboard-card"
-            whileHover={{ scale: 1.05 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+        <div className={`dashboard-cards ${isLoaded ? 'stagger-in' : ''}`}>
+          <div className="dashboard-card hover-lift">
             <p className="card-title">Total Evidence Uploaded</p>
             <p className="card-value">{totalEvidence}</p>
-          </motion.div>
-        </motion.div>
+          </div>
+          <div className="dashboard-card hover-lift wallet-status-card">
+            <p className="card-title">Wallet Status</p>
+            <p className={`card-value wallet-status ${connected ? 'connected' : 'disconnected'}`}>
+              {connected ? '✅ Connected' : '❌ Disconnected'}
+            </p>
+          </div>
+        </div>
       </section>
     </div>
   );

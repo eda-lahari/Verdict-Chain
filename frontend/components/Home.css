@@ -5,7 +5,6 @@
   padding-bottom: 50px;
 }
 
-/* Hero Section */
 .hero-section {
   text-align: center;
   padding: 80px 20px;
@@ -24,8 +23,7 @@
   margin-bottom: 25px;
 }
 
-.hero-buttons .btn-primary,
-.hero-buttons .btn-secondary {
+.hero-buttons .btn-primary, .hero-buttons .btn-secondary {
   display: inline-block;
   padding: 12px 25px;
   margin: 0 10px;
@@ -56,7 +54,6 @@
   transform: scale(1.05);
 }
 
-/* Dashboard Section */
 .dashboard-section {
   max-width: 1200px;
   margin: 50px auto;
@@ -96,4 +93,190 @@
 .card-value {
   font-size: 2rem;
   font-weight: bold;
+}
+
+.wallet-test-section {
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 600px;
+  border: 2px solid #007bff;
+  border-radius: 10px;
+  background-color: #f8f9fa;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+
+.wallet-test-section.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.wallet-test-title {
+  margin: 0 0 15px 0;
+  color: #007bff;
+}
+
+.wallet-status-container {
+  margin-top: 15px;
+}
+
+.connection-status {
+  padding: 10px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.connection-status.connected {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.connection-status.disconnected {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease forwards;
+}
+
+.slide-in {
+  animation: slideInFromTop 0.8s ease forwards;
+}
+
+.stagger-in .dashboard-card {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: slideInUp 0.6s ease forwards;
+}
+
+.stagger-in .dashboard-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.pulse-hover {
+  transition: all 0.3s ease;
+}
+
+.pulse-hover:hover {
+  animation: pulse 0.6s ease;
+}
+
+.wallet-status-card .wallet-status.connected {
+  color: #28a745;
+  font-size: 14px;
+}
+
+.wallet-status-card .wallet-status.disconnected {
+  color: #dc3545;
+  font-size: 14px;
+}
+
+.celebration-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.celebration-text {
+  background: linear-gradient(135deg, #4f46e5, #3b82f6);
+  color: white;
+  padding: 30px 50px;
+  border-radius: 20px;
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  animation: bounceIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-50px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .wallet-test-section {
+    margin: 20px 10px;
+    padding: 15px;
+  }
+  
+  .celebration-text {
+    font-size: 1.5rem;
+    padding: 20px 30px;
+  }
 }
