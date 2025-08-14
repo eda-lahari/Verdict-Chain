@@ -60,10 +60,10 @@ export default function Home({ totalEvidence }: HomeProps) {
           Upload, verify, and manage evidence safely using blockchain technology.
         </p>
         <div className="hero-buttons">
-          <Link to="/upload" className="btn-primary">
+          <Link to="/evidence" className="btn-primary">
             Upload Evidence
           </Link>
-          <Link to="/view" className="btn-secondary">
+          <Link to="/evidence" className="btn-secondary">
             View Evidence
           </Link>
         </div>

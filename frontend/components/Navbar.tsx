@@ -26,11 +26,8 @@ export default function Navbar() {
           <Link to="/" style={{ textDecoration: 'none', color: '#666', padding: '0.5rem' }}>
             Home
           </Link>
-          <Link to="/upload" style={{ textDecoration: 'none', color: '#666', padding: '0.5rem' }}>
-            Upload Evidence
-          </Link>
-          <Link to="/view" style={{ textDecoration: 'none', color: '#666', padding: '0.5rem' }}>
-            View Evidence
+          <Link to="/evidence" style={{ textDecoration: 'none', color: '#666', padding: '0.5rem' }}>
+            Evidence
           </Link>
         </div>
       </div>

@@ -3,8 +3,7 @@ import Navbar from "./components/Navbar";
 import Home from "./components/Home";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import UploadEvidence from "./components/UploadEvidence";
-import ViewEvidence from "./components/ViewEvidence";
+import EvidenceManagement from "./components/EvidenceManagement";
 import { useState } from "react";
 
 function App() {
@@ -17,8 +16,10 @@ function App() {
         <Route path="/" element={<Home totalEvidence={totalEvidence} />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/upload" element={<UploadEvidence setTotalEvidence={setTotalEvidence} />} />
-        <Route path="/view" element={<ViewEvidence />} />
+        <Route 
+          path="/evidence" 
+          element={<EvidenceManagement setTotalEvidence={setTotalEvidence} />} 
+        />
       </Routes>
     </BrowserRouter>
   );
