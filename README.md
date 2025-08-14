@@ -44,6 +44,8 @@ Create a trustless, court-grade evidence management layer where police, forensic
    - Basic JWT session + UI gating for Investigator / Forensics / Judge.
 
 ---
+![pic-1](https://github.com/user-attachments/assets/b3d13f1b-42a2-4243-81f0-65f69769a388)
+![pic-2](https://github.com/user-attachments/assets/03d9114d-2e84-4e01-9278-d251c9707fd1)
 
 ## 🔮 Future Scope
 
