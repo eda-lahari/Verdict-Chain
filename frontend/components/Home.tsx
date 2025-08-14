@@ -32,7 +32,7 @@ export default function Home({ totalEvidence }: HomeProps) {
           Upload, verify, and manage evidence safely using blockchain technology.
         </p>
         <div className="hero-buttons">
-          <Link to="/evidence" className="btn-primary">
+          <Link to="/evidence" className="btn-primary"> </Link>
           <Link
             to="/upload"
             onClick={handleUploadClick}
