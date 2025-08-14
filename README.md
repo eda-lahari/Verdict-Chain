@@ -1,40 +1,64 @@
-## Create Aptos Dapp Boilerplate Template
+# ⚖️ Verdict-Chain – Tamper-Proof Evidence Management on Aptos
 
-The Boilerplate template provides a starter dapp with all necessary dapp infrastructure and a simple wallet info implementation, transfer APT and a simple message board functionality to send and read a message on chain.
+**Verdict-Chain** is a blockchain-powered platform to securely upload, verify, and track court evidence. Files are stored on **IPFS**, metadata and integrity proofs are anchored on the **Aptos** blockchain, and the **MERN** stack powers the app experience. The system delivers immutable audit trails, privacy-preserving verification, and real-time tamper alerts.
 
-## Read the Boilerplate template docs
+---
 
-To get started with the Boilerplate template and learn more about the template functionality and usage, head over to the [Boilerplate template docs](https://learn.aptoslabs.com/en/dapp-templates/boilerplate-template)
+## ✨ Highlights
 
-## The Boilerplate template provides:
+- **Immutable Registry (Aptos):** Evidence ID, SHA-256 hash, timestamps, roles, and custody events recorded as on-chain objects.
+- **Decentralized Storage (IPFS/Pinata):** Content-addressed files with gateway links and pinned availability.
+- **Non-Transferable NFTs:** Each evidence item mints as a bound NFT (soulbound) with full custody history.
+- **Multi-Sig Chain of Custody:** Transfers require approvals from multiple authorized roles.
+- **Zero-Knowledge Friendly:** Store/verify ZK proofs off-chain; commit proof hashes on-chain.
+- **Real-Time Alerts:** Client subscribes to Aptos events and flags suspicious updates.
+- **Built-in Tamper Check:** Frontend compares expected hash vs. current to detect local manipulation.
 
-- **Folder structure** - A pre-made dapp folder structure with a `frontend` and `contract` folders.
-- **Dapp infrastructure** - All required dependencies a dapp needs to start building on the Aptos network.
-- **Wallet Info implementation** - Pre-made `WalletInfo` components to demonstrate how one can use to read a connected Wallet info.
-- **Transfer APT implementation** - Pre-made `transfer` components to send APT to an address.
-- **Message board functionality implementation** - Pre-made `message` components to send and read a message on chain
+---
 
-## What tools the template uses?
+## 🧭 Vision
 
-- React framework
-- Vite development tool
-- shadcn/ui + tailwind for styling
-- Aptos TS SDK
-- Aptos Wallet Adapter
-- Node based Move commands
-- [Vite-pwa](https://vite-pwa-org.netlify.app/)
+Create a trustless, court-grade evidence management layer where police, forensics, and courts collaborate without fearing data loss, alteration, or opaque custody. Replace vulnerable paper trails and siloed databases with verifiable, privacy-first workflows.
 
-## What Move commands are available?
+---
 
-The tool utilizes [aptos-cli npm package](https://github.com/aptos-labs/aptos-cli) that lets us run Aptos CLI in a Node environment.
+## 🔑 Key Features
 
-Some commands are built-in the template and can be ran as a npm script, for example:
+1. **Evidence Upload**
+   - Client computes SHA-256, uploads to IPFS via Pinata.
+   - Aptos entry (CID + hash + metadata) is created atomically.
 
-- `npm run move:publish` - a command to publish the Move contract
-- `npm run move:test` - a command to run Move unit tests
-- `npm run move:compile` - a command to compile the Move contract
-- `npm run move:upgrade` - a command to upgrade the Move contract
-- `npm run dev` - a command to run the frontend locally
-- `npm run deploy` - a command to deploy the dapp to Vercel
+2. **Verification**
+   - Any viewer recomputes local SHA-256 and checks chain metadata.
+   - Optional ZK proof validation without exposing file contents.
 
-For all other available CLI commands, can run `npx aptos` and see a list of all available commands.
+3. **Custody**
+   - Multi-role approvals stored as events; evidence NFT metadata updates.
+   - Full diff-less audit trail retrievable by case ID.
+
+4. **Tamper Detection**
+   - Frontend integrity hook (`useTamperCheck`) compares expected vs. current hash.
+   - Alerts + optional auto-logout on mismatch.
+
+5. **Role-Aware Access**
+   - Basic JWT session + UI gating for Investigator / Forensics / Judge.
+
+---
+
+## 🔮 Future Scope
+
+- AI-based media authenticity scoring (deepfake detection).
+- Cross-jurisdiction evidence exchanges via chain bridges.
+- Secure mobile capture (body-cam ingest + offline cache + sync).
+- Formal verification of Move modules for custody invariants.
+- Hardware-backed key custody (HSM / passkey).
+
+---
+
+## 🧱 Tech Stack
+
+- **Frontend:** React, Vite, TypeScript, Tailwind, Aptos SDK
+- **Blockchain:** Aptos (Move), Events, Token Objects (non-transferable)
+- **Storage:** IPFS + Pinata
+
+---
