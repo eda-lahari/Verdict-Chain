@@ -19,7 +19,7 @@ export default function Navbar() {
           color: '#333',
           textDecoration: 'none' 
         }}>
-          Verdict-Chain ⚖️
+          Verdict-Chain ⚖
         </Link>
         
         <div style={{ display: 'flex', gap: '1.5rem' }}>

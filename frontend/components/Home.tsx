@@ -30,7 +30,7 @@ export default function Home({ totalEvidence }: HomeProps) {
         </div>
       )}
 
-      <div className={`wallet-test-section ${isLoaded ? 'fade-in' : ''}`}>
+      <div className={`wallet-test-section ${isLoaded ? "fade-in" : ""}`}>
         <h3 className="wallet-test-title">🧪 Wallet Connection Test</h3>
         <WalletSelector />
         <div className="wallet-status-container">
@@ -38,17 +38,21 @@ export default function Home({ totalEvidence }: HomeProps) {
             <div className="connection-status connected">
               <strong>✅ Wallet Connected Successfully!</strong>
               <br />
-              <small>Address: {account?.address.toString().slice(0, 10)}...{account?.address.toString().slice(-8)}</small>
+              <small>
+                Address:{" "}
+                {account?.address.toString().slice(0, 10)}...
+                {account?.address.toString().slice(-8)}
+              </small>
             </div>
           ) : (
             <div className="connection-status disconnected">
-              ⚠️ Please connect your wallet to use blockchain features
+              ⚠ Please connect your wallet to use blockchain features
             </div>
           )}
         </div>
       </div>
 
-      <section className={`hero-section ${isLoaded ? 'slide-in' : ''}`}>
+      <section className={`hero-section ${isLoaded ? "slide-in" : ""}`}>
         <h1 className="hero-title">Secure, Immutable Evidence on Blockchain</h1>
         <p className="hero-subtitle">
           Upload, verify, and manage evidence safely using blockchain technology.
@@ -69,15 +73,19 @@ export default function Home({ totalEvidence }: HomeProps) {
 
       <section className="dashboard-section">
         <h2 className="dashboard-title">Dashboard</h2>
-        <div className={`dashboard-cards ${isLoaded ? 'stagger-in' : ''}`}>
+        <div className={`dashboard-cards ${isLoaded ? "stagger-in" : ""}`}>
           <div className="dashboard-card hover-lift">
             <p className="card-title">Total Evidence Uploaded</p>
             <p className="card-value">{totalEvidence}</p>
           </div>
           <div className="dashboard-card hover-lift wallet-status-card">
             <p className="card-title">Wallet Status</p>
-            <p className={`card-value wallet-status ${connected ? 'connected' : 'disconnected'}`}>
-              {connected ? '✅ Connected' : '❌ Disconnected'}
+            <p
+              className={`card-value wallet-status ${
+                connected ? "connected" : "disconnected"
+              }`}
+            >
+              {connected ? "✅ Connected" : "❌ Disconnected"}
             </p>
           </div>
         </div>
