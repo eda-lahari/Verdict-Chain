@@ -48,8 +48,10 @@ Home Page:
 ![pic-1](https://github.com/user-attachments/assets/b3d13f1b-42a2-4243-81f0-65f69769a388)
 Evidence Encryption:
 ![pic-2](https://github.com/user-attachments/assets/03d9114d-2e84-4e01-9278-d251c9707fd1)
-
-
+Blockchain Integration:
+<img width="1894" height="899" alt="Screenshot 2025-08-14 135057" src="https://github.com/user-attachments/assets/b7de0944-c9e8-4a76-8193-d55797ff6a42" />
+Blockchain status:
+<img width="1892" height="904" alt="Screenshot 2025-08-14 135248" src="https://github.com/user-attachments/assets/2b719f03-c27e-414c-b44e-8cbcf6cd525f" />
 
 ##  Future Scope
 
