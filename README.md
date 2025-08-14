@@ -1,10 +1,10 @@
-# ⚖️ Verdict-Chain – Tamper-Proof Evidence Management on Aptos
+#  Verdict-Chain – Tamper-Proof Evidence Management on Aptos
 
 **Verdict-Chain** is a blockchain-powered platform to securely upload, verify, and track court evidence. Files are stored on **IPFS**, metadata and integrity proofs are anchored on the **Aptos** blockchain, and the **MERN** stack powers the app experience. The system delivers immutable audit trails, privacy-preserving verification, and real-time tamper alerts.
 
 ---
 
-## ✨ Highlights
+##  Highlights
 
 - **Immutable Registry (Aptos):** Evidence ID, SHA-256 hash, timestamps, roles, and custody events recorded as on-chain objects.
 - **Decentralized Storage (IPFS/Pinata):** Content-addressed files with gateway links and pinned availability.
@@ -16,13 +16,13 @@
 
 ---
 
-## 🧭 Vision
+##  Vision
 
 Create a trustless, court-grade evidence management layer where police, forensics, and courts collaborate without fearing data loss, alteration, or opaque custody. Replace vulnerable paper trails and siloed databases with verifiable, privacy-first workflows.
 
 ---
 
-## 🔑 Key Features
+##  Key Features
 
 1. **Evidence Upload**
    - Client computes SHA-256, uploads to IPFS via Pinata.
@@ -44,10 +44,14 @@ Create a trustless, court-grade evidence management layer where police, forensic
    - Basic JWT session + UI gating for Investigator / Forensics / Judge.
 
 ---
+Home Page:
 ![pic-1](https://github.com/user-attachments/assets/b3d13f1b-42a2-4243-81f0-65f69769a388)
+Evidence Encryption:
 ![pic-2](https://github.com/user-attachments/assets/03d9114d-2e84-4e01-9278-d251c9707fd1)
 
-## 🔮 Future Scope
+
+
+##  Future Scope
 
 - AI-based media authenticity scoring (deepfake detection).
 - Cross-jurisdiction evidence exchanges via chain bridges.
@@ -57,10 +61,13 @@ Create a trustless, court-grade evidence management layer where police, forensic
 
 ---
 
-## 🧱 Tech Stack
+##  Tech Stack
 
 - **Frontend:** React, Vite, TypeScript, Tailwind, Aptos SDK
 - **Blockchain:** Aptos (Move), Events, Token Objects (non-transferable)
 - **Storage:** IPFS + Pinata
 
 ---
+
+Video Link to project : 
+https://drive.google.com/drive/folders/1vkh_OFVl70m5FCq24Bw1NBJnTJTH7vFD?usp=sharing
