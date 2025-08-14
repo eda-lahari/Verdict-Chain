@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Hash, Link, CheckCircle, AlertCircle, FileText, Image, Video, File, Copy, Check, Key, Calendar, Eye, Trash2, Download } from 'lucide-react';
+import { Upload, Hash, Link, CheckCircle, AlertCircle, FileText, Image, Video, File, Copy, Check, Calendar, Eye, Trash2, Download } from 'lucide-react';
 
 // Types
 interface FileMetadata {
   id: string;
+  caseId: string;
   name: string;
   size: number;
   type: string;
   hash: string;
   ipfsHash?: string;
   uploadDate: string;
-  nftKey: string;
   url?: string;
   pinataUrl?: string;
   gatewayUrl?: string;
@@ -24,9 +24,10 @@ interface UploadResult {
   sha256Hash: string;
   pinataUrl?: string;
   gatewayUrl?: string;
+  caseId: string;
 }
 
-// SHA-256 hash function (your original function)
+// SHA-256 hash function
 const sha256 = async (file: File): Promise<string> => {
   const arrayBuffer = await file.arrayBuffer();
   const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
@@ -40,9 +41,9 @@ const pinataUpload = async (file: File, jwt: string): Promise<{ IpfsHash: string
   formData.append('file', file);
 
   const metadata = JSON.stringify({
-    name: `NFT-${Date.now()}-${file.name}`,
+    name: `Upload-${Date.now()}-${file.name}`,
     keyvalues: {
-      uploadedBy: 'NFT-Upload-System',
+      uploadedBy: 'File-Upload-System',
       timestamp: new Date().toISOString()
     }
   });
@@ -69,11 +70,11 @@ const pinataUpload = async (file: File, jwt: string): Promise<{ IpfsHash: string
   return await response.json();
 };
 
-// Generate NFT Key
-const generateNFTKey = (): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < 32; i++) {
+// Generate unique case ID
+const generateCaseId = (): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = 'CASE-';
+  for (let i = 0; i < 8; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
@@ -88,10 +89,8 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-const IpfsNftUpload: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'generate' | 'upload' | 'manage'>('generate');
-  const [nftKey, setNftKey] = useState<string>('');
-  const [keyGenerated, setKeyGenerated] = useState<boolean>(false);
+const IpfsUploadSystem: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'upload' | 'manage'>('upload');
   const [uploadedFiles, setUploadedFiles] = useState<FileMetadata[]>([]);
   
   // Upload states
@@ -105,35 +104,20 @@ const IpfsNftUpload: React.FC = () => {
   const [copied, setCopied] = useState<string | null>(null);
   const [selectedFileDetails, setSelectedFileDetails] = useState<FileMetadata | null>(null);
 
-  // Environment variables (hardcoded for artifact environment)
-  const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI3ZjRiYjJkMC0xZDY0LTQ1OTgtYjYzMC1hZDJiYzdlMjM5ZGQiLCJlbWFpbCI6IjIyNTAxYTA1MTVAcHZwc2l0LmFjLmluIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjgyMzMwYjA5MGNjNzNhMDZkYjEwIiwic2NvcGVkS2V5U2VjcmV0IjoiNTg5ZjhlMTllYTE0OGVmNDcyOWI3YzU1OTdjZjUxOGQ2M2RhNDQ3MTI1Y2U1OWNlNTc2YzNlY2IzNzdmYTExYyIsImV4cCI6MTc4NjY1ODk0MX0.8W6IfvrKeYWIFA5eyUtJpjg4qBVr83NPKB_f1Vm_yPE';
+  // Environment variables (you should replace this with your actual JWT)
+  const PINATA_JWT = 'your-pinata-jwt-token-here';
   const PINATA_GATEWAY = 'https://gateway.pinata.cloud/ipfs';
 
   // Load saved data
   useEffect(() => {
-    const savedKey = localStorage.getItem('nft-key');
-    const savedFiles = localStorage.getItem('nft-files');
-    
-    if (savedKey) {
-      setNftKey(savedKey);
-      setKeyGenerated(true);
-    }
-    
-    if (savedFiles) {
-      setUploadedFiles(JSON.parse(savedFiles));
-    }
+    const savedFiles = JSON.parse(localStorage.getItem('uploaded-files') || '[]');
+    setUploadedFiles(savedFiles);
   }, []);
 
   // Save data
   useEffect(() => {
-    if (nftKey) {
-      localStorage.setItem('nft-key', nftKey);
-    }
-  }, [nftKey]);
-
-  useEffect(() => {
     if (uploadedFiles.length > 0) {
-      localStorage.setItem('nft-files', JSON.stringify(uploadedFiles));
+      localStorage.setItem('uploaded-files', JSON.stringify(uploadedFiles));
     }
   }, [uploadedFiles]);
 
@@ -143,13 +127,6 @@ const IpfsNftUpload: React.FC = () => {
     if (mimeType.startsWith('video/')) return <Video className="w-8 h-8 text-purple-500" />;
     if (mimeType === 'application/pdf') return <FileText className="w-8 h-8 text-red-500" />;
     return <File className="w-8 h-8 text-gray-500" />;
-  };
-
-  // Generate key handler
-  const handleGenerateKey = () => {
-    const newKey = generateNFTKey();
-    setNftKey(newKey);
-    setKeyGenerated(true);
   };
 
   // Copy to clipboard
@@ -220,11 +197,6 @@ const IpfsNftUpload: React.FC = () => {
       return;
     }
 
-    if (!keyGenerated) {
-      setError('Please generate an NFT key first.');
-      return;
-    }
-
     setUploading(true);
     setError(null);
 
@@ -241,29 +213,32 @@ const IpfsNftUpload: React.FC = () => {
         return;
       }
 
-      // Step 3: Upload to Pinata IPFS
+      // Step 3: Generate unique case ID
+      const caseId = generateCaseId();
+
+      // Step 4: Upload to Pinata IPFS
       console.log('Uploading to Pinata IPFS...');
       const pinataResult = await pinataUpload(selectedFile, PINATA_JWT);
 
-      // Step 4: Create file metadata
+      // Step 5: Create file metadata
       const fileMetadata: FileMetadata = {
         id: Date.now() + Math.random().toString(),
+        caseId: caseId,
         name: selectedFile.name,
         size: selectedFile.size,
         type: selectedFile.type,
         hash: hash,
         ipfsHash: pinataResult.IpfsHash,
         uploadDate: new Date().toISOString(),
-        nftKey: nftKey,
         url: URL.createObjectURL(selectedFile),
         pinataUrl: `${PINATA_GATEWAY}/${pinataResult.IpfsHash}`,
         gatewayUrl: `https://ipfs.io/ipfs/${pinataResult.IpfsHash}`
       };
 
-      // Step 5: Save file record
+      // Step 6: Save file record
       setUploadedFiles(prev => [...prev, fileMetadata]);
 
-      // Step 6: Set upload result
+      // Step 7: Set upload result
       const result: UploadResult = {
         success: true,
         ipfsHash: pinataResult.IpfsHash,
@@ -271,7 +246,8 @@ const IpfsNftUpload: React.FC = () => {
         fileSize: selectedFile.size,
         sha256Hash: hash,
         pinataUrl: `${PINATA_GATEWAY}/${pinataResult.IpfsHash}`,
-        gatewayUrl: `https://ipfs.io/ipfs/${pinataResult.IpfsHash}`
+        gatewayUrl: `https://ipfs.io/ipfs/${pinataResult.IpfsHash}`,
+        caseId: caseId
       };
 
       setUploadResult(result);
@@ -293,56 +269,19 @@ const IpfsNftUpload: React.FC = () => {
     }
   };
 
-  // File preview component
-  const FilePreview: React.FC<{ file: FileMetadata }> = ({ file }) => {
-    if (file.type.startsWith('image/')) {
-      return (
-        <img 
-          src={file.pinataUrl || file.url} 
-          alt={file.name} 
-          className="w-full h-48 object-cover rounded-lg"
-          onError={() => {
-            // Fallback to local URL if Pinata URL fails
-            if (file.url) {
-              const img = document.querySelector(`img[alt="${file.name}"]`) as HTMLImageElement;
-              if (img) img.src = file.url;
-            }
-          }}
-        />
-      );
-    }
-    return (
-      <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-        {getFileIcon(file.type)}
-        <span className="ml-2 text-gray-600">{file.name}</span>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white">
-            <h1 className="text-3xl font-bold mb-2">NFT Upload System</h1>
-            <p className="text-purple-100">Generate keys, upload to Pinata IPFS, and manage your NFT assets</p>
+            <h1 className="text-3xl font-bold mb-2">File Upload System</h1>
+            <p className="text-purple-100">Upload files to IPFS and manage your digital assets</p>
           </div>
 
           {/* Tabs */}
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6">
-              <button
-                onClick={() => setActiveTab('generate')}
-                className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === 'generate'
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <Key className="w-4 h-4 inline mr-2" />
-                Generate Key
-              </button>
               <button
                 onClick={() => setActiveTab('upload')}
                 className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
@@ -370,40 +309,6 @@ const IpfsNftUpload: React.FC = () => {
 
           {/* Tab Content */}
           <div className="p-6">
-            {/* Generate Key Tab */}
-            {activeTab === 'generate' && (
-              <div className="max-w-2xl mx-auto text-center">
-                <div className="mb-8">
-                  <Key className="w-16 h-16 mx-auto text-purple-500 mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Generate NFT Key</h2>
-                  <p className="text-gray-600">Create a unique key to secure your NFT file uploads</p>
-                </div>
-
-                {!keyGenerated ? (
-                  <button
-                    onClick={handleGenerateKey}
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all"
-                  >
-                    Generate Key
-                  </button>
-                ) : (
-                  <div className="bg-gray-50 p-6 rounded-xl">
-                    <h3 className="text-lg font-semibold mb-4 text-gray-800">Your NFT Key</h3>
-                    <div className="flex items-center justify-between bg-white p-4 rounded-lg border">
-                      <code className="text-sm text-purple-600 font-mono break-all">{nftKey}</code>
-                      <button
-                        onClick={() => copyToClipboard(nftKey, 'key')}
-                        className="ml-4 p-2 text-gray-500 hover:text-purple-600 transition-colors"
-                      >
-                        {copied === 'key' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-4">Keep this key safe! You'll need it to access your uploaded files.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Upload Files Tab */}
             {activeTab === 'upload' && (
               <div className="max-w-2xl mx-auto">
@@ -413,19 +318,13 @@ const IpfsNftUpload: React.FC = () => {
                   <p className="text-gray-600">Upload files to Pinata IPFS and get SHA-256 hash + IPFS hash</p>
                 </div>
 
-                {!keyGenerated && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                    <p className="text-yellow-800">⚠️ Please generate an NFT key first before uploading files.</p>
-                  </div>
-                )}
-
                 {/* Upload Area */}
                 <div
                   className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors ${
                     dragActive 
                       ? 'border-purple-500 bg-purple-50' 
                       : 'border-gray-300 hover:border-gray-400'
-                  } ${!keyGenerated ? 'opacity-50 pointer-events-none' : ''}`}
+                  }`}
                   onDragEnter={handleDrag}
                   onDragLeave={handleDrag}
                   onDragOver={handleDrag}
@@ -437,7 +336,6 @@ const IpfsNftUpload: React.FC = () => {
                     accept="image/*,video/*,.pdf,.txt"
                     className="hidden"
                     id="fileInput"
-                    disabled={!keyGenerated}
                   />
                   
                   {uploading ? (
@@ -503,6 +401,23 @@ const IpfsNftUpload: React.FC = () => {
                     </div>
 
                     <div className="space-y-4">
+                      {/* Case ID */}
+                      <div>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <FileText className="w-4 h-4 text-green-500" />
+                          <span className="font-medium text-gray-700">Case ID:</span>
+                        </div>
+                        <div className="flex items-center space-x-2 bg-white p-3 rounded border">
+                          <code className="text-sm font-bold text-green-600 flex-1">{uploadResult.caseId}</code>
+                          <button
+                            onClick={() => copyToClipboard(uploadResult.caseId, 'caseId')}
+                            className="text-green-500 hover:text-green-700 p-1"
+                          >
+                            {copied === 'caseId' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
                       {/* SHA-256 Hash */}
                       <div>
                         <div className="flex items-center space-x-2 mb-2">
@@ -567,7 +482,7 @@ const IpfsNftUpload: React.FC = () => {
               <div>
                 <div className="mb-6">
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">Uploaded Files</h2>
-                  <p className="text-gray-600">View and manage your NFT assets</p>
+                  <p className="text-gray-600">View and manage your digital assets</p>
                 </div>
 
                 {uploadedFiles.length === 0 ? (
@@ -588,7 +503,7 @@ const IpfsNftUpload: React.FC = () => {
                           onClick={() => setSelectedFileDetails(file)}
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-gray-800 truncate">{file.name}</h3>
+                            <h3 className="font-semibold text-gray-800">{file.caseId}</h3>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -611,7 +526,7 @@ const IpfsNftUpload: React.FC = () => {
                                 {file.hash.substring(0, 16)}...
                               </code>
                             </div>
-                            <p className="text-gray-500">{formatFileSize(file.size)}</p>
+                            <p className="text-gray-500">{file.name} • {formatFileSize(file.size)}</p>
                           </div>
                         </div>
                       ))}
@@ -623,11 +538,19 @@ const IpfsNftUpload: React.FC = () => {
                         <div>
                           <h3 className="text-lg font-semibold mb-4 text-gray-800">File Details</h3>
                           
-                          <FilePreview file={selectedFileDetails} />
+                          <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-6">
+                            {getFileIcon(selectedFileDetails.type)}
+                            <span className="ml-2 text-gray-600">File Preview Not Available</span>
+                          </div>
                           
-                          <div className="mt-6 space-y-4">
+                          <div className="space-y-4">
                             <div>
-                              <label className="text-sm font-medium text-gray-700">Name:</label>
+                              <label className="text-sm font-medium text-gray-700">Case ID:</label>
+                              <p className="text-gray-900 font-semibold text-lg">{selectedFileDetails.caseId}</p>
+                            </div>
+
+                            <div>
+                              <label className="text-sm font-medium text-gray-700">Original Name:</label>
                               <p className="text-gray-900">{selectedFileDetails.name}</p>
                             </div>
                             
@@ -677,13 +600,6 @@ const IpfsNftUpload: React.FC = () => {
                                 </div>
                               </div>
                             )}
-                            
-                            <div>
-                              <label className="text-sm font-medium text-gray-700">NFT Key:</label>
-                              <code className="text-xs bg-gray-200 p-2 rounded block mt-1 break-all">
-                                {selectedFileDetails.nftKey}
-                              </code>
-                            </div>
 
                             {selectedFileDetails.pinataUrl && (
                               <div className="space-y-2 pt-2">
@@ -724,18 +640,14 @@ const IpfsNftUpload: React.FC = () => {
         {/* Instructions */}
         <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
           <h3 className="font-semibold text-gray-800 mb-3">How it works:</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-medium text-blue-800 mb-2">1. Generate Key</h4>
-              <p className="text-blue-700">Create a unique NFT key for your uploads</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="bg-purple-50 p-4 rounded-lg">
-              <h4 className="font-medium text-purple-800 mb-2">2. Upload Files</h4>
-              <p className="text-purple-700">Files are hashed (SHA-256) and uploaded to Pinata IPFS</p>
+              <h4 className="font-medium text-purple-800 mb-2">1. Upload Files</h4>
+              <p className="text-purple-700">Files are hashed (SHA-256) and uploaded to Pinata IPFS with unique Case ID</p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
-              <h4 className="font-medium text-green-800 mb-2">3. Get Identifiers</h4>
-              <p className="text-green-700">Receive SHA-256 hash and IPFS CID for NFT metadata</p>
+              <h4 className="font-medium text-green-800 mb-2">2. Get Identifiers</h4>
+              <p className="text-green-700">Receive Case ID, SHA-256 hash and IPFS CID for tracking</p>
             </div>
           </div>
         </div>
@@ -744,4 +656,4 @@ const IpfsNftUpload: React.FC = () => {
   );
 };
 
-export default IpfsNftUpload;
+export default IpfsUploadSystem;
